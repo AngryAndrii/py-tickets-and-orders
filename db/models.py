@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models import UniqueConstraint
@@ -72,7 +73,7 @@ class Order(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"Order: {self.created_at}"
+        return f"{self.created_at}"
 
     class Meta:
         ordering = ["-created_at"]
@@ -90,25 +91,28 @@ class Ticket(models.Model):
 
     def __str__(self) -> str:
         return (
-            f"Ticket: "
-            f"{self.movie_session.movie.title} "
-            f"{self.movie_session.show_time} "
+            f"{self.movie_session} "
             f"(row: {self.row}, seat: {self.seat})"
         )
 
     def clean(self) -> None:
         if (
-                0 >= self.row > self.movie_session.cinema_hall.rows
-                or 0 >= self.seat
-                > self.movie_session.cinema_hall.seats_in_row
+                self.row > self.movie_session.cinema_hall.rows
+                or self.row <= 0
         ):
-            raise ValueError(
-                f"Seat myst be in range [1, "
-                f"{self.movie_session.cinema_hall.seats_in_row}], "
-                f"not {self.seat}, "
-                f"and row must be in range"
-                f" [1, {self.movie_session.cinema_hall.rows}], "
-                f"not {self.row}")
+            raise ValidationError(
+                {"row": ["row number must be in available "
+                         "range: (1, rows): (1, 10)"]}
+            )
+
+        if (
+                self.seat > self.movie_session.cinema_hall.seats_in_row
+                or self.seat <= 0
+        ):
+            raise ValidationError(
+                {"seat": ["seat number must be in available "
+                 "range: (1, seats_in_row): (1, 12)"]}
+            )
 
     def save(self, *args, **kwargs) -> Any:
         self.full_clean()
