@@ -20,6 +20,8 @@ def create_order(tickets: list[dict],
     if date:
         order.created_at = date
 
+    order.save()
+
     for ticket in tickets:
         movie_session = MovieSession.objects.get(pk=ticket["movie_session"])
         Ticket.objects.create(
