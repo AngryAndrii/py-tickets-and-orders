@@ -101,8 +101,9 @@ class Ticket(models.Model):
                 or self.row <= 0
         ):
             raise ValidationError(
-                {"row": ["row number must be in available "
-                         "range: (1, rows): (1, 10)"]}
+                {"row": [f"row number must be in available "
+                         f"range: (1, rows): (1, "
+                         f"{self.movie_session.cinema_hall.rows})"]}
             )
 
         if (
@@ -111,7 +112,8 @@ class Ticket(models.Model):
         ):
             raise ValidationError(
                 {"seat": ["seat number must be in available "
-                 "range: (1, seats_in_row): (1, 12)"]}
+                 f"range: (1, seats_in_row): (1, "
+                  f"{self.movie_session.cinema_hall.seats_in_row})"]}
             )
 
     def save(self, *args, **kwargs) -> Any:
